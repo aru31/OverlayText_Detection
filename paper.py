@@ -146,7 +146,7 @@ quantizedcrmatrix = []
 
 for i in range(0, 44):
     for j in range(0, 78):
-        quantizedgraymatrix.append(np.divide(dctmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+        quantizedgraymatrix.append(np.divide(dct[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
 
 
 for i in range(0, 44):
@@ -164,8 +164,44 @@ for i in range(0, 22):
         quantizedcrmatrix.append(np.divide(dctcrmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
 
 
+quantizedgraymatrix = np.asarray(quantizedgraymatrix)
+quantizedgraymatrix = quantizedgraymatrix.reshape(44, 78, 8, 8)
+
+quantizedymatrix = np.asarray(quantizedymatrix)
+quantizedymatrix = quantizedymatrix.reshape(44, 78, 8, 8)
+
+quantizedcbmatrix = np.asarray(quantizedcbmatrix)
+quantizedcbmatrix = quantizedcbmatrix.reshape(22, 39, 8, 8)
+
+quantizedcrmatrix = np.asarray(quantizedcrmatrix)
+quantizedcrmatrix = quantizedcrmatrix.reshape(22, 39, 8, 8)
 
 
+"""
+Dequantisation Done hereS
+"""
+
+dequantizedgraymatrix = []
+dequantizedymatrix = []
+dequantizedcbmatrix = []
+dequantizedcrmatrix = []
+
+
+for i in range(0, 44):
+    for j in range(0, 78):
+        dequantizedgraymatrix.append(np.multiply(quantizedgraymatrix[i, j, 0:, 0: ], QUANTIZATION_MAT))
+
+for i in range(0, 44):
+    for j in range(0, 78):
+        dequantizedymatrix.append(np.multiply(quantizedymatrix[i, j, 0:, 0: ], QUANTIZATION_MAT))
+
+for i in range(0, 22):
+    for j in range(0, 39):
+        dequantizedcbmatrix.append(np.multiply(quantizedcbmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT))
+
+for i in range(0, 22):
+    for j in range(0, 39):
+        dequantizedcrmatrix.append(np.multiply(quantizedcrmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT))
 
 
 
