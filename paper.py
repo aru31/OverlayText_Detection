@@ -17,8 +17,10 @@ from skimage import data
 from skimage import color
 from skimage.util import view_as_blocks
 from scipy import fftpack
+from scipy import misc
 from skimage.measure import block_reduce
 import math
+import cv2
 
 %matplotlib inline
 
@@ -243,15 +245,61 @@ for i in range(0, 352):
         else:
             trunction_error[i, j] = 0
 
+newtruncationmatrix = trunction_error
+
+for i in range(0, 44):
+    for j in range(0, 78):
+        count = 0
+        for k in range(0, 8):
+            for l in range(0, 8):
+                if newtruncationmatrix[k, l] == 1:
+                    count = count + 1
+        if count>8:
+            for k in range(0, 8):
+                for l in range(0, 8):
+                    if(count>8):
+                        newtruncationmatrix[k, l] = 1
+                    else:
+                        newtruncationmatrix[k, l] = 0
 
 
 
+"""
+PreProcessing Truncation Matrix for Better Results
+"""
+
+"""
+First Step Shifting Operation to Convert straight line to ZigZag
+"""
+
+for i in range(0, 22):
+    for j in range(0, 77):
+        newtruncationmatrix[(2*i), j+1] = newtruncationmatrix[(2*i), j]
+
+for i in range(0, 22):
+    newtruncationmatrix[(2*i), 77] = 0
+
+for i in range(0, 44):
+    for j in range(0, 39):
+        newtruncationmatrix[i+1, (2*j)] = newtruncationmatrix[i, (2*j)]
+
+for j in range(0, 39):
+    newtruncationmatrix[43, (2*j)] = 0
 
 
+"""
+Morphological Dilation with horizontal Structure Element [1, 1, 1]
+"""
+
+kernel = np.ones((3, ),np.uint8)
+dilatedtruncationerror = cv2.dilate(newtruncationerror, kernel,iterations = 1)
 
 
+"""
+Image resizing Using Nearest Neighbour Interpolation
+"""
 
-
+mrmap = scipy.misc.imresize(arr, size, interp='nearest', mode=None)
 
 
 
