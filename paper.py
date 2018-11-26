@@ -30,6 +30,13 @@ def get_2D_dct(img):
     """
     return fftpack.dct(fftpack.dct(img.T, norm='ortho').T, norm='ortho')
 
+
+def get_2d_idct(coefficients):
+    """ Get 2D Inverse Cosine Transform of Image
+    """
+    return fftpack.idct(fftpack.idct(coefficients.T, norm='ortho').T, norm='ortho')
+
+
 def rgb2ycbcr(im):
     xform = np.array([[.299, .587, .114], [-.1687, -.3313, .5], [.5, -.4187, -.0813]])
     ycbcr = im.dot(xform.T)
@@ -60,7 +67,6 @@ gray = np.array(gray)
 bw, bh = 8, 8 # block size
 w = gray.shape[1] # width, height of image
 h = gray.shape[0]
-
 
 """
 Converted it into YCbCr Image
@@ -107,28 +113,24 @@ block_shape = (8, 8)
 """
 Fourier for GrayScale Image
 """
-graymatrix = view_as_blocks(gray, block_shape)
-dct = get_2D_dct(graymatrix)
-
+gray = get_2D_dct(gray)
+dct = view_as_blocks(gray, block_shape)
 
 """
 Fourier for RGB Image
 """
-ymatrix = view_as_blocks(yplane, block_shape)
-dctymatrix = get_2D_dct(ymatrix)
+ymatrix = get_2D_dct(yplane)
+dctymatrix = view_as_blocks(ymatrix, block_shape)
 
-cbmatrix = view_as_blocks(cbplanesampled, block_shape)
-dctcbmatrix = get_2D_dct(cbmatrix)
+cbmatrix = get_2D_dct(cbplanesampled)
+dctcbmatrix = view_as_blocks(cbmatrix, block_shape)
 
-crmatrix = view_as_blocks(crplanesampled, block_shape)
-dctcrmatrix = get_2D_dct(crmatrix)
-
-
+crmatrix = get_2D_dct(crplanesampled)
+dctcrmatrix = view_as_blocks(crmatrix, block_shape)
 
 """
 Till here We get the Fourier Cofficients of the whole Image
 """
-
 
 """
 We do use a Standard Quantisation matrix for Every Fourier 8*8 Block  
@@ -204,11 +206,29 @@ for i in range(0, 22):
         dequantizedcrmatrix.append(np.multiply(quantizedcrmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT))
 
 
+dequantizedgraymatrix = np.asarray(dequantizedgraymatrix)
+dequantizedgraymatrix = dequantizedgraymatrix.reshape(44, 78, 8, 8)
 
+dequantizedymatrix = np.asarray(dequantizedymatrix)
+dequantizedymatrix = dequantizedymatrix.reshape(44, 78, 8, 8)
 
+dequantizedcbmatrix = np.asarray(dequantizedcbmatrix)
+dequantizedcbmatrix = dequantizedcbmatrix.reshape(22, 39, 8, 8)
 
+dequantizedcrmatrix = np.asarray(dequantizedcrmatrix)
+dequantizedcrmatrix = dequantizedcrmatrix.reshape(22, 39, 8, 8)
 
+grayreshaped = []
+yreshaped = []
 
+grayreshaped = dequantizedgraymatrix.transpose(0, 2, 1, 3).reshape(352, 624)
+yreshaped = dequantizedymatrix.transpose(0, 2, 1, 3).reshape(352, 624)
+
+grayfromdct = get_2d_idct(grayreshaped);
+yfromdct = get_2d_idct(yreshaped);
+
+plt.imshow(grayfromdct)
+plt.imshow(yfromdct)
 
 
 
