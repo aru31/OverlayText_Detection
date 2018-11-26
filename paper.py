@@ -235,12 +235,3 @@ plt.imshow(yfromdct)
 
 
 
-
-
-
-
-
-
-
-
-
