@@ -221,6 +221,9 @@ dequantizedcrmatrix = dequantizedcrmatrix.reshape(22, 39, 8, 8)
 grayreshaped = []
 yreshaped = []
 
+yinitialreshaped = dctymatrix.transpose(0, 2, 1, 3).reshape(352, 624)
+
+
 grayreshaped = dequantizedgraymatrix.transpose(0, 2, 1, 3).reshape(352, 624)
 yreshaped = dequantizedymatrix.transpose(0, 2, 1, 3).reshape(352, 624)
 
@@ -229,6 +232,28 @@ yfromdct = get_2d_idct(yreshaped);
 
 plt.imshow(grayfromdct)
 plt.imshow(yfromdct)
+
+
+trunction_error = np.absolute(np.array(yinitialreshaped) - np.array(yreshaped))
+
+for i in range(0, 352):
+    for j in range(0 ,624):
+        if trunction_error[i, j] > 2:
+            trunction_error[i, j] = 1
+        else:
+            trunction_error[i, j] = 0
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
