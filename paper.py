@@ -17,6 +17,8 @@ from skimage import data
 from skimage import color
 from skimage.util import view_as_blocks
 from scipy import fftpack
+from skimage.measure import block_reduce
+import math
 
 %matplotlib inline
 
@@ -28,8 +30,27 @@ def get_2D_dct(img):
     """
     return fftpack.dct(fftpack.dct(img.T, norm='ortho').T, norm='ortho')
 
+def rgb2ycbcr(im):
+    xform = np.array([[.299, .587, .114], [-.1687, -.3313, .5], [.5, -.4187, -.0813]])
+    ycbcr = im.dot(xform.T)
+    ycbcr[:,:,[1,2]] += 128
+    return np.uint8(ycbcr)
+
+
+def ycbcr2rgb(im):
+    xform = np.array([[1, 0, 1.402], [1, -0.34414, -.71414], [1, 1.772, 0]])
+    rgb = im.astype(np.float)
+    rgb[:,:,[1,2]] -= 128
+    rgb = rgb.dot(xform.T)
+    np.putmask(rgb, rgb > 255, 255)
+    np.putmask(rgb, rgb < 0, 0)
+    return np.uint8(rgb)
 
 img = mpimg.imread('test.jpg')     
+
+"""
+Converted it into GrayScale Image
+"""
 gray = rgb2gray(img)
 gray = gray[0: 352, 0: 624]
 plt.imshow(gray, cmap = plt.get_cmap('gray'))
@@ -40,15 +61,70 @@ bw, bh = 8, 8 # block size
 w = gray.shape[1] # width, height of image
 h = gray.shape[0]
 
+
+"""
+Converted it into YCbCr Image
+"""
+ycbcr = rgb2ycbcr(img)
+ycbcr = ycbcr[0: 352, 0: 624]
+plt.imshow(ycbcr)
+ycbcr = np.array(ycbcr)
+
+"""
+Converting 3 Dimensional Ycbcr array into three 2D arrays
+"""
+
+yplane = []
+cbplane = []
+crplane = []
+
+yplane.append(ycbcr[0: , 0:, 0])
+cbplane.append(ycbcr[0: , 0:, 1])
+crplane.append(ycbcr[0: , 0:, 2])
+
+yplane = np.asarray(yplane)
+cbplane = np.asarray(cbplane)
+crplane = np.asarray(crplane)
+
+yplane = yplane.reshape(352, 624)
+cbplane = cbplane.reshape(352, 624)
+crplane = crplane.reshape(352, 624)
+
+"""
+SubSampling the Cb Cr planes only by a factor of 2
+"""
+cbplanesampled = block_reduce(cbplane, block_size=(2, 2), func=np.mean)
+crplanesampled = block_reduce(crplane, block_size=(2, 2), func=np.mean)
+
+
 """
 if (sz==8) it tells us that it is an 8 bit grayscale image 
 """
 
 # size of blocks
 block_shape = (8, 8)
-imagematrix = view_as_blocks(gray, block_shape)
 
-dct = get_2D_dct(imagematrix)
+"""
+Fourier for GrayScale Image
+"""
+graymatrix = view_as_blocks(gray, block_shape)
+dct = get_2D_dct(graymatrix)
+
+
+"""
+Fourier for RGB Image
+"""
+ymatrix = view_as_blocks(yplane, block_shape)
+dctymatrix = get_2D_dct(ymatrix)
+
+cbmatrix = view_as_blocks(cbplanesampled, block_shape)
+dctcbmatrix = get_2D_dct(cbmatrix)
+
+crmatrix = view_as_blocks(crplanesampled, block_shape)
+dctcrmatrix = get_2D_dct(crmatrix)
+
+
+
 """
 Till here We get the Fourier Cofficients of the whole Image
 """
@@ -59,13 +135,47 @@ We do use a Standard Quantisation matrix for Every Fourier 8*8 Block
 """
 QUANTIZATION_MAT = np.array([[16,11,10,16,24,40,51,61],[12,12,14,19,26,58,60,55],[14,13,16,24,40,57,69,56 ],[14,17,22,29,51,87,80,62],[18,22,37,56,68,109,103,77],[24,35,55,64,81,104,113,92],[49,64,78,87,103,121,120,101],[72,92,95,98,112,100,103,99]])
 
-quantized_block = np.divide(imagematrix[0, 0, 0:, 0: ], QUANTIZATION_MAT).astype(int)
+quantized_block = np.round(np.divide(dct[0, 0, 0:, 0: ], QUANTIZATION_MAT))
 
-quantizedmatrix = []
+quantized_block_y = np.divide(dctymatrix[0, 0, 0:, 0: ], QUANTIZATION_MAT).astype(int)
+
+quantizedgraymatrix = []
+quantizedymatrix = []
+quantizedcbmatrix = []
+quantizedcrmatrix = []
 
 for i in range(0, 44):
     for j in range(0, 78):
-        quantizedmatrix.append(np.divide(imagematrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+        quantizedgraymatrix.append(np.divide(dctmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+
+
+for i in range(0, 44):
+    for j in range(0, 78):
+        quantizedymatrix.append(np.divide(dctymatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+
+
+for i in range(0, 22):
+    for j in range(0, 39):
+        quantizedcbmatrix.append(np.divide(dctcbmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+
+
+for i in range(0, 22):
+    for j in range(0, 39):
+        quantizedcrmatrix.append(np.divide(dctcrmatrix[i, j, 0:, 0: ], QUANTIZATION_MAT).astype(int))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
