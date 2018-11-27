@@ -263,7 +263,7 @@ for i in range(0,352,8):
                 for l in range(0,8):
                     newtruncationmatrix[i+k,j+l] = 0
                     
-plt.imshow(newtruncationmatrix)
+plt.imshow(newtruncationmatrix) 
 
 """
 PreProcessing Truncation Matrix for Better Results
@@ -273,39 +273,53 @@ PreProcessing Truncation Matrix for Better Results
 First Step Shifting Operation to Convert straight line to ZigZag
 """
 
-for i in range(0, 22):
-    for j in range(0, 77):
-        newtruncationmatrix[(2*i), j+1] = newtruncationmatrix[(2*i), j]
+for i in range(0, 176):
+    for j in range(1, 624):
+        newtruncationmatrix[(2*i), 624-(j)] = newtruncationmatrix[(2*i), 624-(j+1)]
 
-for i in range(0, 22):
-    newtruncationmatrix[(2*i), 77] = 0
+for i in range(0, 176):
+    newtruncationmatrix[(2*i), 0] = 0
 
-for i in range(0, 44):
-    for j in range(0, 39):
-        newtruncationmatrix[i+1, (2*j)] = newtruncationmatrix[i, (2*j)]
+for i in range(1, 352):
+    for j in range(0, 312):
+        newtruncationmatrix[352-i, (2*j)] = newtruncationmatrix[352-(i+1), (2*j)]
 
-for j in range(0, 39):
-    newtruncationmatrix[43, (2*j)] = 0
+for j in range(0, 312):
+    newtruncationmatrix[0, (2*j)] = 0
 
-
+plt.imshow(newtruncationmatrix)
 """
 Morphological Dilation with horizontal Structure Element [1, 1, 1]
 """
 
 kernel = np.ones((3, ),np.uint8)
-dilatedtruncationerror = cv2.dilate(newtruncationerror, kernel,iterations = 1)
+dilatedtruncationerror = cv2.dilate(newtruncationmatrix, kernel,iterations = 1)
+
+plt.imshow(dilatedtruncationerror)
 
 
 """
 Image resizing Using Nearest Neighbour Interpolation
 """
 
-mrmap = scipy.misc.imresize(arr, size, interp='nearest', mode=None)
+#mrmap = scipy.misc.imresize(arr, size, interp='nearest', mode=None)
 
+"""
+"""
+gradientmap = [[0 for _ in range(624)] for _ in range(352)]
+gradientmap = np.asarray(gradientmap)
 
-
-
-
+for i in range(0,352):
+    for j in range(0,624):
+        if dilatedtruncationerror[i,j] == 1:
+            if j==0:
+                gradientmap[i,j] = yplane[i,j]
+            else:
+                gradientmap[i,j] = yplane[i,j] - yplane[i,j-1]
+        else:
+            gradientmap[i,j] = 0
+            
+plt.imshow(gradientmap)
 
 
 
