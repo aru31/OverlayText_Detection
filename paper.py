@@ -55,7 +55,7 @@ def ycbcr2rgb(im):
     np.putmask(rgb, rgb < 0, 0)
     return np.uint8(rgb)
 
-img = mpimg.imread('test.jpg')     
+img = mpimg.imread('news.jpg')     
 
 """
 Converted it into GrayScale Image
@@ -247,22 +247,23 @@ for i in range(0, 352):
 
 newtruncationmatrix = trunction_error
 
-for i in range(0, 44):
-    for j in range(0, 78):
+for i in range(0,352,8):
+    for j in range(0,624,8):
         count = 0
-        for k in range(0, 8):
-            for l in range(0, 8):
-                if newtruncationmatrix[k, l] == 1:
-                    count = count + 1
-        if count>8:
-            for k in range(0, 8):
-                for l in range(0, 8):
-                    if(count>8):
-                        newtruncationmatrix[k, l] = 1
-                    else:
-                        newtruncationmatrix[k, l] = 0
-
-
+        for k in range(0,8):
+            for l in range(0,8):
+                if newtruncationmatrix[i+k,j+l] == 1:
+                    count  =count + 1
+        if count>16:
+            for k in range(0,8):
+                for l in range(0,8):
+                    newtruncationmatrix[i+k,j+l] = 1
+        else:
+            for k in range(0,8):
+                for l in range(0,8):
+                    newtruncationmatrix[i+k,j+l] = 0
+                    
+plt.imshow(newtruncationmatrix)
 
 """
 PreProcessing Truncation Matrix for Better Results
